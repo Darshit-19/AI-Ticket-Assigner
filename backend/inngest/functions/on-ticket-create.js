@@ -44,24 +44,36 @@ export const onTicketCreated = inngest.createFunction(
       });
 
       const moderator = await step.run("assign-moderator", async () => {
-        let user = await User.findOne({
-          role: "moderator",
-          skills: {
-            $elemMatch: {
-              $regex: relatedskills.join("|"),
-              $options: "i",
-            },
-          },
-        });
-        if (!user) {
-          user = await User.findOne({
-            role: "admin",
-          });
+        // Get all moderators
+        const moderators = await User.find({ role: "moderator" });
+
+        let bestModerator = null;
+        let highestMatchCount = 0;
+
+        // Loop through moderators to find the one with most matching skills
+        for (const moderator of moderators) {
+          const matchCount = moderator.skills.filter((skill) =>
+            relatedskills
+              .map((s) => s.toLowerCase())
+              .includes(skill.toLowerCase())
+          ).length;
+
+          if (matchCount > highestMatchCount) {
+            highestMatchCount = matchCount;
+            bestModerator = moderator;
+          }
         }
+
+        // Fallback to admin if no moderator has matching skills
+        const assignedUser =
+          bestModerator || (await User.findOne({ role: "admin" }));
+
+        // Update the ticket with assigned user
         await Ticket.findByIdAndUpdate(ticket._id, {
-          assignedTo: user?._id || null,
+          assignedTo: assignedUser?._id || null,
         });
-        return user;
+
+        return assignedUser;
       });
 
       await step.run("send-email-notification", async () => {
