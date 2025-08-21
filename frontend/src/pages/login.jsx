@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , Link } from "react-router-dom";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -75,7 +75,7 @@ export default function LoginPage() {
             </button>
           </div>
           <div className="text-center mt-4">
-            Don't have an account? <a href="/signup" className="link link-primary">Sign Up</a>
+            Don't have an account?  <Link to="/signup" className="link link-primary">Sign up</Link>
           </div>
         </form>
       </div>
